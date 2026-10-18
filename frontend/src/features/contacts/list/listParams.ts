@@ -11,7 +11,8 @@ export const PAGE_SIZE = 20;
 const MAX_OFFSET = 10_000; // matches the backend limit
 const MAX_PAGE = MAX_OFFSET / PAGE_SIZE + 1;
 export const MIN_SEARCH_LENGTH = 2;
-const TAG_PATTERN = /^[\p{L}\p{N} _-]{1,40}$/u;
+/** Same rule as the backend: letters, digits, space, - and _, 1–40 characters. */
+export const TAG_PATTERN = /^[\p{L}\p{N} _-]{1,40}$/u;
 
 export interface ListState {
   q: string;
