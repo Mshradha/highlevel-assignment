@@ -1,6 +1,6 @@
 import { idParamsSchema } from "../../shared/validation/schemas.js";
 import { validated } from "../../shared/validation/validated.js";
-import { listActivitiesQuerySchema } from "../contacts/contact.schemas.js";
+import { listActivitiesQuerySchema } from "./activity.schemas.js";
 import { toActivityDTO } from "./activity.mapper.js";
 import { activityService } from "./activity.service.js";
 

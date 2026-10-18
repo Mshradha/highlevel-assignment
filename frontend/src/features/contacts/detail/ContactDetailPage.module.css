@@ -168,3 +168,8 @@
   padding-left: 18px;
   font-size: 0.875rem;
 }
+
+/* The conflict comparison can be wider than a phone; scroll it, not the page. */
+.tableScroll {
+  overflow-x: auto;
+}

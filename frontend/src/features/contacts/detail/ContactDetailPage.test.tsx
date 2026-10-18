@@ -101,7 +101,10 @@ describe("ContactDetailPage — editing", () => {
     await retype("Company", "Globex");
 
     await userEvent.click(saveButton());
-    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Saving…" }));
     expect(updateContact).toHaveBeenCalledTimes(1);
 
@@ -176,6 +179,8 @@ describe("ContactDetailPage — conflicting updates", () => {
     const banner = await screen.findByText(
       "Someone else changed this contact while you were editing.",
     );
+    // Focus moves to the decision the user has to make.
+    expect(screen.getByRole("button", { name: "Keep my changes" })).toHaveFocus();
     const table = within(banner.parentElement!).getByRole("table");
     const rows = within(table).getAllByRole("row").slice(1); // skip the header row
     expect(rows.map((row) => row.textContent)).toEqual([

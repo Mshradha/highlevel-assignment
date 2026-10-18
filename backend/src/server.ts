@@ -4,6 +4,15 @@ import { loadConfig } from "./config/env.js";
 import { connectToDatabase, disconnectFromDatabase } from "./db/connection.js";
 import { logger } from "./shared/logger.js";
 
+// A promise rejection nothing handled is a bug: log it and exit, so a process
+// manager restarts a known-good process instead of running in an unknown state.
+process.on("unhandledRejection", (reason) => {
+  logger.error("unhandled promise rejection", {
+    error: reason instanceof Error ? { message: reason.message, stack: reason.stack } : reason,
+  });
+  process.exit(1);
+});
+
 async function main(): Promise<void> {
   // Node's built-in .env loader; real environment variables still take precedence.
   if (existsSync(".env")) {

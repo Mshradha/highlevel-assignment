@@ -11,3 +11,15 @@ describe("GET /api/health without a database", () => {
     expect(res.body).toEqual({ status: "degraded", db: "down" });
   });
 });
+
+describe("security headers", () => {
+  it("are set on every API response, including errors", async () => {
+    const res = await request(createApp()).get("/api/does-not-exist");
+    expect(res.headers).toMatchObject({
+      "x-content-type-options": "nosniff",
+      "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
+    });
+    expect(res.headers).not.toHaveProperty("x-powered-by");
+  });
+});

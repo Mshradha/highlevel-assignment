@@ -26,3 +26,13 @@
   margin: 0 auto;
   padding: 24px;
 }
+
+@media (max-width: 600px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .main {
+    padding: 16px;
+  }
+}

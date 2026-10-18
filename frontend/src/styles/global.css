@@ -52,3 +52,20 @@ h1 {
   white-space: nowrap;
   border: 0;
 }
+
+/* Checkboxes: the browser default (13px) is below the 24px minimum target
+   size on touch screens. */
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+  }
+}

@@ -1,4 +1,4 @@
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
 import { addTag, removeTag } from "../../../api/contacts";
 import type { Contact, TagChangeResult } from "../../../api/types";
 import { Button } from "../../../components/Button";
@@ -16,6 +16,7 @@ interface Props {
 
 export function TagEditor({ contact, onChanged }: Props) {
   const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [pending, setPending] = useState<string>(); // the tag being added or removed
   const [message, setMessage] = useState<{ kind: "error" | "info"; text: string }>();
@@ -65,9 +66,15 @@ export function TagEditor({ contact, onChanged }: Props) {
               <TagChip
                 tag={tag}
                 removing={pending === tag}
-                onRemove={() =>
-                  run(tag, () => removeTag(contact.id, tag), `“${tag}” was already removed.`)
-                }
+                onRemove={async () => {
+                  const ok = await run(
+                    tag,
+                    () => removeTag(contact.id, tag),
+                    `“${tag}” was already removed.`,
+                  );
+                  // The chip (and its focused button) is gone: keep keyboard users in the section.
+                  if (ok) inputRef.current?.focus();
+                }}
               />
             </li>
           ))}
@@ -87,13 +94,13 @@ export function TagEditor({ contact, onChanged }: Props) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={40}
-          disabled={pending !== undefined}
+          readOnly={pending !== undefined}
+          ref={inputRef}
         />
         <Button
           type="submit"
           busy={pending !== undefined && pending === normalizeTagInput(text)}
           busyLabel="Adding…"
-          disabled={pending !== undefined}
         >
           Add tag
         </Button>

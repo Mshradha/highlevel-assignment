@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button } from "../../../components/Button";
 import { EmptyState, ErrorState, LoadingState } from "../../../components/StateViews";
 import { useContactList } from "../../../hooks/resources";
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useSelection } from "../../../hooks/useSelection";
 import { BulkTagBar } from "./BulkTagBar";
 import { describeBulkResult } from "./bulkResult";
+import { ContactCards } from "./ContactCards";
 import { ContactFilters } from "./ContactFilters";
 import { ContactTable } from "./ContactTable";
 import styles from "./ContactsPage.module.css";
@@ -51,6 +53,9 @@ function ContactListView({ state, onPageChange, onClearFilters }: ViewProps) {
   const list = useContactList(toApiParams(state));
   const selection = useSelection();
   const [notice, setNotice] = useState<string>();
+  // Phones and portrait tablets get cards; a 7-column table needs more width.
+  const narrow = useMediaQuery("(max-width: 860px)");
+  const ContactResults = narrow ? ContactCards : ContactTable;
 
   // While the next page loads, keep showing the previous one (dimmed) instead
   // of flashing a spinner.
@@ -88,7 +93,7 @@ function ContactListView({ state, onPageChange, onClearFilters }: ViewProps) {
   } else {
     body = (
       <>
-        <ContactTable
+        <ContactResults
           contacts={page.data}
           selection={selection}
           refreshing={list.status === "loading"}

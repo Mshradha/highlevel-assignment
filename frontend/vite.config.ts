@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
       // The browser calls /api on the Vite origin; Vite forwards to Express. Same origin → no CORS.
       proxy: { "/api": apiTarget },
     },
+    // `npm run preview` serves the production build; it needs the same proxy.
+    preview: {
+      port: 4173,
+      strictPort: true,
+      proxy: { "/api": apiTarget },
+    },
     test: {
       environment: "jsdom",
       setupFiles: ["./src/test/setup.ts"],

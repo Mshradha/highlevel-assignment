@@ -19,7 +19,19 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: "**/responsive.spec.ts",
+    },
+    {
+      // A phone (Chromium engine, 412px wide, touch screen) for layout checks.
+      name: "mobile",
+      use: { ...devices["Pixel 7"] },
+      testMatch: "**/responsive.spec.ts",
+    },
+  ],
   webServer: [
     {
       command: "npx tsx src/server.ts",

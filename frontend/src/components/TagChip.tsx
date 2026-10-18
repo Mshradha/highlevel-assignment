@@ -15,8 +15,10 @@ export function TagChip({ tag, onRemove, removing = false }: TagChipProps) {
         <button
           type="button"
           className={styles.chipRemove}
-          onClick={onRemove}
-          disabled={removing}
+          onClick={() => {
+            if (!removing) onRemove();
+          }}
+          aria-disabled={removing || undefined}
           aria-label={`Remove tag ${tag}`}
         >
           ×

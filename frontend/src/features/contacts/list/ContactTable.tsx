@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import type { Contact } from "../../../api/types";
 import { TagChip } from "../../../components/TagChip";
 import type { Selection } from "../../../hooks/useSelection";
 import { contactName, formatDate } from "../../../utils/format";
 import styles from "./ContactsPage.module.css";
+import { SelectAllCheckbox } from "./SelectAllCheckbox";
 
 interface Props {
   contacts: Contact[];
@@ -15,17 +15,6 @@ interface Props {
 
 export function ContactTable({ contacts, selection, refreshing }: Props) {
   const location = useLocation();
-  const pageIds = contacts.map((c) => c.id);
-  const selectedOnPage = pageIds.filter((id) => selection.isSelected(id)).length;
-  const allSelected = pageIds.length > 0 && selectedOnPage === pageIds.length;
-
-  // "Some selected" can only be shown through the DOM property.
-  const selectAllRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = selectedOnPage > 0 && !allSelected;
-    }
-  }, [selectedOnPage, allSelected]);
 
   return (
     <div className={styles.tableWrap}>
@@ -38,12 +27,10 @@ export function ContactTable({ contacts, selection, refreshing }: Props) {
         <thead>
           <tr>
             <th scope="col" className={styles.checkCell}>
-              <input
-                ref={selectAllRef}
-                type="checkbox"
-                checked={allSelected}
-                onChange={() => selection.toggleAll(pageIds)}
-                aria-label="Select all contacts on this page"
+              <SelectAllCheckbox
+                pageIds={contacts.map((c) => c.id)}
+                selection={selection}
+                ariaLabel="Select all contacts on this page"
               />
             </th>
             <th scope="col">Name</th>

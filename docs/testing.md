@@ -1,12 +1,12 @@
 # Testing
 
-**Status (verified 2026-10-18):**
+**Status (verified 2026-10-18, after the Phase 12 review fixes):**
 
 | Suite | Tool | Files | Tests | Result |
 |---|---|---:|---:|---|
-| Backend unit + integration | Vitest, Supertest, mongodb-memory-server (replica set) | 20 | 218 | ✅ all pass |
-| Frontend unit + component | Vitest, React Testing Library, jsdom | 11 | 122 | ✅ all pass |
-| End-to-end + accessibility | Playwright (Chromium), axe-core | 2 | 11 | ✅ all pass |
+| Backend unit + integration | Vitest, Supertest, mongodb-memory-server (replica set) | 20 | 219 | ✅ all pass |
+| Frontend unit + component | Vitest, React Testing Library, jsdom | 11 | 124 | ✅ all pass |
+| End-to-end + accessibility + keyboard + phone layout | Playwright (desktop Chrome and Pixel 7), axe-core | 4 | 15 | ✅ all pass |
 
 Each suite has been run at least twice in a row with the same result.
 
@@ -47,6 +47,7 @@ IDs refer to [00-requirements.md](00-requirements.md). File paths are relative t
 | FR-40–45 activity | Only real changes recorded, newest first, `_id` tie-break, limit, 404 for unknown contact; contact change and activity roll back together | `activities.test.ts`, `transaction.test.ts`, rollback cases in `contacts.update.test.ts` / `tags.test.ts` / `bulk-tags.test.ts` |
 | NFR-08 errors | One error shape; 400/404/409/413/422/500/503 mappings; internals hidden in 500s | `errorHandler.test.ts`, `validated.test.ts`, `health.test.ts` |
 | NFR-15 logging | Request ID on every response; path logged, **query string never logged** | `requestLogger.test.ts` |
+| Security headers | `nosniff`, `no-store`, `no-referrer` on every response; no `x-powered-by` | `health-db-down.test.ts` |
 | FR-50/51/54 UI states | Loading, empty vs no-match, error + retry, past-the-end page | `features/contacts/list/ContactsPage.test.tsx`, `…/detail/ContactDetailPage.test.tsx` |
 | NFR-13 request races | Out-of-order responses (including a source that ignores abort), cancellation on key change and unmount, Strict Mode double mount, debounce | `hooks/useApiRequest.test.tsx`, `hooks/hooks.test.tsx`, `ContactsPage.test.tsx` |
 | AC-21 URL state | Parsing with fallbacks, page reset on criteria change, back button | `features/contacts/list/listParams.test.tsx`, e2e `contacts.spec.ts` |
@@ -55,7 +56,8 @@ IDs refer to [00-requirements.md](00-requirements.md). File paths are relative t
 | AC-25 double submit | One request per save | `ContactDetailPage.test.tsx`, `components.test.tsx` |
 | AC-26 bulk UI | Summary, refresh, selection cleared on success, kept on failure, reset when criteria change | `ContactsPage.test.tsx`, e2e `contacts.spec.ts` |
 | Main journey | Browse, search, filter, sort, paginate, open, edit, tag, bulk tag, activity, persistence after reload, back navigation | e2e `contacts.spec.ts` |
-| NFR-14 accessibility | No axe (WCAG 2.1 A/AA) violations on list (with bulk bar) and detail (with a field error); labelled controls queried by role/name throughout | e2e `accessibility.spec.ts`, all component tests |
+| NFR-14 accessibility | No axe (WCAG 2.1 A/AA) violations on list (with bulk bar) and detail (with a field error); labelled controls queried by role/name throughout; **keyboard focus stays in place after Enter-to-save and Enter-to-add-tag; a conflict moves focus to the decision** | e2e `accessibility.spec.ts`, e2e `keyboard.spec.ts`, `ContactDetailPage.test.tsx`, all component tests |
+| Responsive layout | Phone (Pixel 7): no sideways scrolling, cards instead of the table, 24 px checkboxes and tag buttons, 44 px controls, axe clean, select → bulk tag → open works; cards on narrow screens (component) | e2e `responsive.spec.ts`, `ContactsPage.test.tsx` |
 | FR-61 seed safety | Refuses production and non-disposable database names; repeatable | `seed.test.ts` |
 | NFR-11 config | Env validation; refuses a non-replica-set database | `config.test.ts`, `db-connection.test.ts` |
 
@@ -75,6 +77,7 @@ Each guarantee below was deliberately broken in the source, the relevant tests w
 | Naive "keep my draft" instead of the three-way merge | ✅ |
 | Selection-reset `key` removed from the list view | ✅ |
 | Labels removed from row checkboxes | ✅ axe reports a critical `label` violation |
+| Table forced back onto phones | ✅ both phone tests fail |
 
 ## Verified by hand (not automated)
 
@@ -87,7 +90,7 @@ Each guarantee below was deliberately broken in the source, the relevant tests w
 ## Known gaps
 
 - **No load or throughput testing.** Performance evidence is query plans (reads per query), not requests per second under concurrency.
-- **End-to-end tests run in Chromium only**, and depend on network access to the MongoDB deployment.
-- **Accessibility:** automated axe checks only. Keyboard-only and screen-reader walkthroughs have not been done systematically.
+- **End-to-end tests run in Chromium only** (desktop and an emulated Pixel 7, not real devices or Safari), and depend on network access to the MongoDB deployment.
+- **Accessibility:** automated axe checks plus two keyboard-flow tests. A full keyboard-only walkthrough and screen-reader testing have not been done systematically.
 - **No CI pipeline** is configured; all results above are from local runs.
 - **No visual-regression tests.**

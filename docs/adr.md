@@ -6,7 +6,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-001: Two independent packages, no npm workspaces
 
-**Status:** Proposed (with the Phase 1 architecture)
+**Status:** Accepted — implemented (Phase 2)
 **Context:** The repo needs `frontend/` and `backend/`. Sharing types between them would need a third package and build wiring (TypeScript project references, ESM/CJS settings).
 **Decision:** Two independent npm packages, each with its own `package.json` and lockfile. The frontend keeps its own copy of the API types (`api/types.ts`, about five types).
 **Alternatives:** npm workspaces + `shared/` package — one install and shared Zod schemas, but more config and a build order to explain. A full-stack framework — doesn't match the requested stack.
@@ -32,7 +32,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-003: Explicit `version` field for optimistic concurrency
 
-**Status:** Proposed
+**Status:** Accepted — implemented and tested (Phase 6; concurrency tests in `contacts.update.test.ts`)
 **Context:** The stale-update scenario in the assignment.
 **Decision:** An integer `version` field. Updates use `findOneAndUpdate({ _id, version: expected }, { …, $inc: { version: 1 } })`. If nothing matches, an existence check decides between 404 and 409. Mongoose's `__v` is disabled.
 **Alternatives:**
@@ -45,7 +45,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-004: Email normalization + partial unique index
 
-**Status:** Proposed
+**Status:** Accepted — implemented and tested (Phases 3, 6)
 **Context:** Email is optional but unique when present, and duplicates must not appear under concurrency.
 **Decision:** Normalize (trim + lowercase) in one function. Store no `email` field at all when empty. Unique index on `email` with `partialFilterExpression: { email: { $type: "string" } }`. Map duplicate-key error `11000` to 409 `DUPLICATE_EMAIL`.
 **Alternatives:**
@@ -56,7 +56,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-005: Prefix search on derived lowercase fields
 
-**Status:** Proposed
+**Status:** Accepted — implemented; measured on 100k contacts (Phase 5, see update below)
 **Context:** Search across name, email, and phone must use indexes at millions of rows (requirement A5).
 **Decision:** Store `fullNameLower`, `lastNameLower`, `phoneDigits` (email is already lowercase). Search with an anchored, escaped regex (`^…`) in a `$or`. Minimum query length 2.
 **Alternatives:**
@@ -68,7 +68,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-006: Offset pagination with bounds
 
-**Status:** Proposed
+**Status:** Accepted — implemented (Phase 5)
 **Context:** The UI needs page navigation. At scale, `skip` and `countDocuments` get slower as offsets and match counts grow.
 **Decision:** `page` + `limit` (≤ 100), maximum offset 10,000, sort always ends with `_id`. `find` and `countDocuments` run in parallel with `maxTimeMS`.
 **Alternatives:** Keyset/cursor pagination — constant cost per page, but no "jump to page 7" and no simple total. Documented as the scale path.
@@ -76,21 +76,21 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-007: Tags
 
-**Status:** Proposed (requirements A13, A16–A18 approved)
+**Status:** Accepted — implemented and tested (Phase 7; requirements A13, A16–A18)
 **Decision:** Tags are lowercase normalized strings inside the contact's `tags` array. Add/remove use filter-guarded atomic updates (`tags: { $ne: tag }` / `tags: tag`), so "did it change?" comes from the database. Tag changes don't bump `version` and don't require one. Duplicate add / absent remove → 200 `changed: false`, no activity.
 **Alternatives:** A separate `tags` collection with IDs — supports renaming and colours, but needs joins and is beyond scope. Bumping `version` on tag changes — gives "any change" semantics but causes false conflicts in the edit form.
 **Consequences:** `updatedAt` changes on tag operations while `version` doesn't. That's documented in the README.
 
 ## ADR-008: Activity history in its own collection
 
-**Status:** Proposed
+**Status:** Accepted — implemented (Phases 3, 7)
 **Decision:** Collection `contact_activities` with index `{ contactId: 1, createdAt: -1, _id: -1 }`.
 **Alternatives:** An array inside the contact — grows without limit (16 MB document limit), makes every contact read and write heavier, and adds index churn. A capped "last 20" array plus full history elsewhere — a possible later optimization.
 **Consequences:** Reads need a second query (cheap, indexed). Consistency with the contact comes from ADR-002. The activity stores `from`/`to` values, which may contain PII; retention policy is a known limitation.
 
 ## ADR-009: Bulk tag assignment in one transaction
 
-**Status:** Proposed — **refines requirement A20**
+**Status:** Accepted — implemented and tested (Phase 7) — **refines requirement A20**
 **Context:** A20 proposed "atomic per contact, not all-or-nothing". With transactions available (ADR-002), we can do better at the same cost.
 **Decision:** One transaction: find eligible contacts → `updateMany` guarded by `tags: { $ne: tag }` → `insertMany` activities. Missing IDs, already-tagged contacts, and contacts at the 50-tag limit are **reported, not errors**. A real failure (database error) rolls back everything, so the client can retry the whole request safely — it's idempotent.
 **Alternatives:** Per-contact updates without a transaction — the read-then-update race could give an activity list that doesn't match what changed.
@@ -114,7 +114,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 
 ## ADR-011: Libraries
 
-**Status:** Proposed
+**Status:** Accepted — implemented (versions below)
 | Need | Choice | Not chosen, and why |
 |---|---|---|
 | HTTP server | Express 5 | Express 4 needs a wrapper for async errors; Fastify/Nest weren't requested |
@@ -130,7 +130,7 @@ Installed in Phase 2 (2026-10-18): Node 24, TypeScript 6.0, Express 5.3, Mongoos
 
 ## ADR-012: List query state in the URL
 
-**Status:** Proposed — promotes optional item 3 into the MVP
+**Status:** Accepted — implemented (Phases 9–10); promotes optional item 3 into the MVP
 **Decision:** `q`, `company`, `tags`, `sortBy`, `sortOrder`, `page` are read from and written to `useSearchParams`. Invalid values from the URL fall back to defaults.
 **Why:** Back button and refresh keep the list view; returning from a contact restores the same page; links can be shared; one source of truth for the query instead of copies in state. React Router already provides it, so it adds no dependency.
 **Consequences:** Typing in search updates the URL only after the debounce, with `replace: true`, so history doesn't fill with keystrokes.

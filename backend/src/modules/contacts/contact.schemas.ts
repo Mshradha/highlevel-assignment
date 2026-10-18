@@ -150,11 +150,3 @@ export const bulkTagBodySchema = z.strictObject({
 });
 
 export type BulkTagBody = z.output<typeof bulkTagBodySchema>;
-
-// ---------------------------------------------------------------------------
-// Activities
-// ---------------------------------------------------------------------------
-
-export const listActivitiesQuerySchema = z.strictObject({
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});

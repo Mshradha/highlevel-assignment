@@ -118,7 +118,9 @@ export function ContactEditForm({ contact, onSaved, onConflict }: Props) {
         </p>
       )}
 
-      <fieldset className={styles.fields} disabled={saving || state.status === "conflict"}>
+      {/* Inputs become read-only (not disabled) while saving or resolving a conflict:
+          a disabled input loses keyboard focus. */}
+      <fieldset className={styles.fields}>
         <legend className="visually-hidden">Contact details</legend>
         {FORM_FIELDS.map((field) => (
           <TextField
@@ -130,6 +132,7 @@ export function ContactEditForm({ contact, onSaved, onConflict }: Props) {
             onChange={(e) => dispatch({ type: "FIELD_CHANGED", field, value: e.target.value })}
             error={state.fieldErrors[field]}
             required={field === "firstName"}
+            readOnly={saving || state.status === "conflict"}
             hint={field === "firstName" ? "Required" : undefined}
           />
         ))}

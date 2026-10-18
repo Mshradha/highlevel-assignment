@@ -136,6 +136,55 @@ describe("ContactsPage — search, filters, sorting, pagination", () => {
   });
 });
 
+describe("ContactsPage — narrow screens", () => {
+  /** Pretends the window is narrow: every media query matches. */
+  function emulateNarrowScreen() {
+    vi.stubGlobal(
+      "matchMedia",
+      (query: string) =>
+        ({
+          matches: true,
+          media: query,
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        }) as unknown as MediaQueryList,
+    );
+  }
+
+  it("shows cards instead of the table, with the same links and selection", async () => {
+    emulateNarrowScreen();
+    bulkAssignTag.mockResolvedValue({
+      tag: "vip",
+      requested: 2,
+      modified: 2,
+      alreadyTagged: 0,
+      skippedTagLimit: 0,
+      notFound: [],
+    });
+    renderAt();
+
+    const cards = await screen.findByRole("list", { name: "Contacts" });
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(within(cards).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(cards).getByRole("link", { name: "Ann Lee" })).toHaveAttribute(
+      "href",
+      `/contacts/${ann.id}`,
+    );
+    // Empty fields are left out of the card rather than shown as "—".
+    expect(within(within(cards).getAllByRole("listitem")[1]!).queryByText("Company")).toBeNull();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select all on this page" }));
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+    await userEvent.type(
+      screen.getByLabelText("Tag to add to the selected contacts"),
+      "vip{Enter}",
+    );
+    expect(bulkAssignTag).toHaveBeenCalledWith([ann.id, bob.id], "vip");
+
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("ContactsPage — selection and bulk tagging", () => {
   it("assigns a tag to the selected contacts, reports the result, and refreshes", async () => {
     bulkAssignTag.mockResolvedValue({

@@ -2,7 +2,8 @@
   // Build tooling and end-to-end tests (run in Node, not the browser).
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    // DOM: e2e tests pass callbacks that run inside the browser (page.evaluate).
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["node"],

@@ -35,7 +35,7 @@ describe("state views", () => {
 });
 
 describe("Button", () => {
-  it("is disabled and shows the busy label while busy, so it can't be submitted twice", async () => {
+  it("ignores clicks and is announced as unavailable while busy, so it can't be submitted twice", async () => {
     const onClick = vi.fn();
     render(
       <Button busy busyLabel="Saving…" onClick={onClick}>
@@ -44,10 +44,26 @@ describe("Button", () => {
     );
     const button = screen.getByRole("button", { name: "Saving…" });
 
-    expect(button).toBeDisabled();
+    // aria-disabled, not native disabled: a focused button that becomes
+    // disabled loses keyboard focus (see e2e/keyboard.spec.ts).
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("doesn't submit its form while busy", async () => {
+    const onSubmit = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button type="submit" busy>
+          Save
+        </Button>
+      </form>,
+    );
+    await userEvent.click(screen.getByRole("button"));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it("defaults to type=button so it never submits a form by accident", () => {

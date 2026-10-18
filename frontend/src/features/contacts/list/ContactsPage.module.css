@@ -15,9 +15,22 @@
   background: var(--color-surface);
 }
 
+/* Grid children default to min-width: auto, so an input would refuse to shrink
+   below its natural width and overflow the panel on narrow screens. */
+.filters > * {
+  min-width: 0;
+}
+
 @media (max-width: 860px) {
   .filters {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .filters {
+    grid-template-columns: 1fr;
+    padding: 12px;
   }
 }
 
@@ -56,6 +69,11 @@
   border: 1px solid var(--color-primary);
   border-radius: 8px;
   background: #eef3ff;
+}
+
+.bulkBar input {
+  flex: 1 1 160px;
+  width: auto;
 }
 
 .notice {
@@ -130,4 +148,87 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Card list (narrow screens) */
+.cardsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardsToolbar {
+  padding: 4px 4px 0;
+  color: var(--color-muted);
+}
+
+.cardsToolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* One card per row on phones, two side by side on tablets. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards[data-refreshing] {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.card[data-selected] {
+  border-color: var(--color-primary);
+  background: #f2f6ff;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardName {
+  font-weight: 600;
+}
+
+.cardDetails {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.cardDetails > div {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cardDetails dt {
+  flex: 0 0 72px;
+  color: var(--color-muted);
+}
+
+.cardDetails dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere; /* long emails wrap instead of widening the page */
 }

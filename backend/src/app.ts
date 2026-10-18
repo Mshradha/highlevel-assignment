@@ -3,6 +3,7 @@ import { contactRouter } from "./modules/contacts/contact.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { errorHandler, notFoundHandler } from "./shared/middleware/errorHandler.js";
 import { requestLogger } from "./shared/middleware/requestLogger.js";
+import { securityHeaders } from "./shared/middleware/securityHeaders.js";
 
 export interface AppOptions {
   logRequests?: boolean;
@@ -17,6 +18,7 @@ export function createApp({ logRequests = false }: AppOptions = {}): express.Exp
   app.disable("x-powered-by");
 
   app.use(requestLogger({ enabled: logRequests }));
+  app.use(securityHeaders);
   app.use(express.json({ limit: "100kb" }));
 
   app.use("/api/health", healthRouter);
