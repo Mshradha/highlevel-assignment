@@ -1,0 +1,2 @@
+# Store and check out text files with LF so Prettier and Git agree on Windows.
+* text=auto eol=lf
