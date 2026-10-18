@@ -336,12 +336,20 @@ If another request changes one of these contacts during the transaction, MongoDB
 
 | Source | Mapped to |
 |---|---|
-| `ZodError` from validation middleware | 400 `VALIDATION_ERROR`, `details.fields: { [path]: message[] }` |
-| Invalid ObjectId (Zod refinement) | 400 `INVALID_ID` |
+| `ZodError` from the `validated()` wrapper | 400 `VALIDATION_ERROR`, `details.fields: { [path]: message[] }` |
+| Malformed `:id` in the URL | 400 `INVALID_ID` (reported alone, even if other input is also wrong) |
 | `AppError` thrown by services | its own status + code |
-| MongoDB `11000` on `email` | 409 `DUPLICATE_EMAIL` |
+| MongoDB `11000` on `email` | 409 `DUPLICATE_EMAIL`, `details.field: "email"` |
+| Mongoose `CastError` (ObjectId) | 400 `INVALID_ID` (safety net) |
+| Mongoose `ValidationError` | 400 `VALIDATION_ERROR` + a `warn` log, because Zod should have caught it first |
 | Malformed JSON body | 400 `INVALID_JSON` |
+| Body over 100 kb | 413 `PAYLOAD_TOO_LARGE` |
+| Unknown route | 404 `ROUTE_NOT_FOUND` |
 | Anything else | 500 `INTERNAL_ERROR`; full error logged with request ID |
+
+**Field keys in `details.fields`:** body fields are unprefixed so they match form field names (`"email"`); query and params fields are prefixed (`"query.limit"`); each unknown body field gets its own `"Unknown field"` entry.
+
+**Validation is a wrapper, not middleware** (`validated(schemas, handler)`): Express 5 makes `req.query` read-only, and the wrapper lets TypeScript infer the handler's input types from the Zod schemas.
 
 Express 5 forwards errors from `async` handlers to the error middleware automatically, so there are no `try/catch` blocks in controllers.
 

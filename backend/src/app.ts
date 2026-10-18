@@ -1,4 +1,5 @@
 import express from "express";
+import { contactRouter } from "./modules/contacts/contact.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { errorHandler, notFoundHandler } from "./shared/middleware/errorHandler.js";
 import { requestLogger } from "./shared/middleware/requestLogger.js";
@@ -19,6 +20,7 @@ export function createApp({ logRequests = false }: AppOptions = {}): express.Exp
   app.use(express.json({ limit: "100kb" }));
 
   app.use("/api/health", healthRouter);
+  app.use("/api/contacts", contactRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
