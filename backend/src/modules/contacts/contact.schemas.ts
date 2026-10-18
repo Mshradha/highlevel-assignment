@@ -64,3 +64,59 @@ export const listContactsQuerySchema = z
   .transform((v) => ({ ...v, sortOrder: v.sortOrder ?? (v.sortBy === "name" ? "asc" : "desc") }));
 
 export type ListContactsQuery = z.output<typeof listContactsQuerySchema>;
+
+// ---------------------------------------------------------------------------
+// PATCH /api/contacts/:id
+// ---------------------------------------------------------------------------
+
+/** For optional fields, "" and whitespace mean "clear this field", same as null. */
+const blankToNull = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? null : value;
+
+const L = CONTACT_LIMITS;
+
+const optionalText = (max: number) =>
+  z.preprocess(blankToNull, z.string().trim().max(max).nullable().optional());
+
+/**
+ * Partial update. `version` is the version the client last saw (optimistic
+ * concurrency, ADR-003). A field that is absent stays unchanged; `null` or ""
+ * clears an optional field. `firstName` is required on every contact, so it
+ * can be changed but never cleared. Tags are not accepted here: they have
+ * their own endpoints (requirement A12).
+ */
+export const updateContactBodySchema = z
+  .strictObject({
+    version: z.number().int().min(1),
+    firstName: z.string().trim().min(1, "First name is required").max(L.nameMax).optional(),
+    lastName: optionalText(L.nameMax),
+    email: z.preprocess(
+      blankToNull,
+      z
+        .string()
+        .trim()
+        .max(L.emailMax)
+        .pipe(z.email("Invalid email address"))
+        .nullable()
+        .optional(),
+    ),
+    phone: z.preprocess(
+      blankToNull,
+      z
+        .string()
+        .trim()
+        .max(L.phoneMax)
+        .refine((v) => {
+          const digits = v.replace(/\D/g, "").length;
+          return digits >= L.phoneDigitsMin && digits <= L.phoneDigitsMax;
+        }, `Phone must contain ${L.phoneDigitsMin}-${L.phoneDigitsMax} digits`)
+        .nullable()
+        .optional(),
+    ),
+    company: optionalText(L.companyMax),
+  })
+  .refine((body) => Object.keys(body).some((key) => key !== "version"), {
+    message: "Provide at least one field to update",
+  });
+
+export type UpdateContactBody = z.output<typeof updateContactBodySchema>;

@@ -43,6 +43,14 @@ export const errors = {
     new AppError(400, "VALIDATION_ERROR", "Request validation failed", { fields }),
   invalidId: () => new AppError(400, "INVALID_ID", "The id in the URL is not a valid id"),
   notFound: (resource: string) => new AppError(404, "NOT_FOUND", `${resource} not found`),
+  /** `current` is the latest server state, so the client can show what changed. */
+  versionConflict: (current: unknown) =>
+    new AppError(
+      409,
+      "VERSION_CONFLICT",
+      "This contact was changed by someone else. Review the latest version and try again.",
+      { current },
+    ),
   duplicateEmail: () =>
     new AppError(409, "DUPLICATE_EMAIL", "Another contact already uses this email", {
       field: "email",

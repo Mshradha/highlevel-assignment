@@ -1,7 +1,7 @@
 import { idParamsSchema } from "../../shared/validation/schemas.js";
 import { validated } from "../../shared/validation/validated.js";
 import { toContactDTO } from "./contact.mapper.js";
-import { listContactsQuerySchema } from "./contact.schemas.js";
+import { listContactsQuerySchema, updateContactBodySchema } from "./contact.schemas.js";
 import { contactService } from "./contact.service.js";
 
 /**
@@ -26,4 +26,12 @@ export const contactController = {
     const contact = await contactService.getById(params.id);
     res.status(200).json(toContactDTO(contact));
   }),
+
+  update: validated(
+    { params: idParamsSchema, body: updateContactBodySchema },
+    async ({ params, body }, _req, res) => {
+      const contact = await contactService.update(params.id, body);
+      res.status(200).json(toContactDTO(contact));
+    },
+  ),
 };

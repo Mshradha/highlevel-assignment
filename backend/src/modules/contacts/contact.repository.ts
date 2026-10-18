@@ -1,4 +1,4 @@
-import type { ClientSession, QueryFilter } from "mongoose";
+import type { ClientSession, QueryFilter, UpdateQuery } from "mongoose";
 import type { ContactLean } from "./contact.mapper.js";
 import { type ContactRecord, ContactModel } from "./contact.model.js";
 import type { ListSort } from "./contact.query.js";
@@ -22,6 +22,31 @@ export const contactRepository = {
   findById(id: string, session?: ClientSession): Promise<ContactLean | null> {
     return ContactModel.findById(id)
       .session(session ?? null)
+      .lean<ContactLean>()
+      .exec();
+  },
+
+  /**
+   * THE optimistic-concurrency write (ADR-003). The version check and the write
+   * are one atomic operation: the update only applies if the document still has
+   * `expectedVersion`, and it increments the version in the same step. Two
+   * requests holding the same version can't both match — the first one changes
+   * the version, so the second finds nothing.
+   *
+   * Returns null when nothing matched: either the contact doesn't exist or its
+   * version moved on. The caller decides which (404 vs 409).
+   */
+  updateIfVersion(
+    id: string,
+    expectedVersion: number,
+    update: UpdateQuery<ContactRecord>,
+    session: ClientSession,
+  ): Promise<ContactLean | null> {
+    return ContactModel.findOneAndUpdate(
+      { _id: id, version: expectedVersion },
+      { ...update, $inc: { version: 1 } },
+      { returnDocument: "after", runValidators: true, session },
+    )
       .lean<ContactLean>()
       .exec();
   },

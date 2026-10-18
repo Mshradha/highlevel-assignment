@@ -7,14 +7,14 @@
  */
 
 /** Trim, collapse runs of whitespace, and use the NFC Unicode form ("é" has one encoding). */
-function cleanText(value: string): string {
+export function normalizeRequiredText(value: string): string {
   return value.normalize("NFC").trim().replace(/\s+/g, " ");
 }
 
 /** For optional free-text fields: empty, null, and undefined all become `undefined`. */
 export function normalizeOptionalText(value: string | null | undefined): string | undefined {
   if (value == null) return undefined;
-  const cleaned = cleanText(value);
+  const cleaned = normalizeRequiredText(value);
   return cleaned === "" ? undefined : cleaned;
 }
 
@@ -30,7 +30,7 @@ export function toPhoneDigits(phone: string): string {
 
 /** "  VIP  Customer " → "vip customer" */
 export function normalizeTag(value: string): string {
-  return cleanText(value).toLowerCase();
+  return normalizeRequiredText(value).toLowerCase();
 }
 
 export interface ContactProfile {
@@ -81,7 +81,7 @@ export interface ContactInput {
  */
 export function buildContactDocument(input: ContactInput) {
   const profile: ContactProfile = {
-    firstName: cleanText(input.firstName),
+    firstName: normalizeRequiredText(input.firstName),
     lastName: normalizeOptionalText(input.lastName),
     email: normalizeEmail(input.email),
     phone: normalizeOptionalText(input.phone),

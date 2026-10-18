@@ -6,3 +6,4 @@ export const contactRouter = Router();
 
 contactRouter.get("/", contactController.list);
 contactRouter.get("/:id", contactController.getById);
+contactRouter.patch("/:id", contactController.update);

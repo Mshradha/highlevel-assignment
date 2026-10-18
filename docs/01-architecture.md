@@ -247,7 +247,7 @@ All bodies are JSON. All errors use:
 | `GET /api/health` | — | 200 `{ status: "ok", db: "up" }` | 503 when DB is down |
 | `GET /api/contacts` | query: `q`, `company`, `tags` (comma-separated), `sortBy`, `sortOrder`, `page`, `limit` | 200 `{ data: ContactDTO[], pagination }` | 400 `VALIDATION_ERROR` |
 | `GET /api/contacts/:id` | — | 200 `ContactDTO` | 400 `INVALID_ID`, 404 `NOT_FOUND` |
-| `PATCH /api/contacts/:id` | `{ version, firstName?, lastName?, email?, phone?, company? }` (unknown keys rejected; `null`/`""` clears an optional field) | 200 `ContactDTO` (new version) | 400, 404, 409 `VERSION_CONFLICT` (`details.current: ContactDTO`), 409 `DUPLICATE_EMAIL` (`details.field: "email"`) |
+| `PATCH /api/contacts/:id` | `{ version, firstName?, lastName?, email?, phone?, company? }` (unknown keys rejected; `null`/`""` clears an optional field; `firstName` can't be cleared; at least one field besides `version`; tags not accepted) | 200 `ContactDTO` (new version). A request with no real change returns 200 with the version unchanged and records no activity | 400, 404, 409 `VERSION_CONFLICT` (`details.current: ContactDTO`), 409 `DUPLICATE_EMAIL` (`details.field: "email"`) |
 | `POST /api/contacts/:id/tags` | `{ tag }` | 200 `{ contact: ContactDTO, changed: boolean }` | 400, 404, 422 `TAG_LIMIT_EXCEEDED` |
 | `DELETE /api/contacts/:id/tags/:tag` | — (tag URL-encoded) | 200 `{ contact, changed }` | 400, 404 |
 | `POST /api/contacts/bulk-tags` | `{ contactIds: string[] (1–500, deduplicated), tag }` | 200 `{ tag, requested, modified, alreadyTagged, skippedTagLimit, notFound: string[] }` | 400 |
