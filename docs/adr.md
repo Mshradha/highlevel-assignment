@@ -64,6 +64,7 @@ Format: **Context → Decision → Alternatives → Consequences.** Status is `A
 - `$text` index: matches whole words (stemmed), not prefixes ("ann" doesn't find "anna"), and can't be combined with our sort indexes.
 - Atlas Search / Elasticsearch: the right answer for substring/fuzzy search at scale, but extra infrastructure.
 **Consequences:** Extra fields to keep in sync, handled in one function (`deriveSearchFields`). Search results are sorted in memory after matching — a documented limitation.
+**Update 2026-10-18 (measured on 100k contacts, [performance.md](performance.md)):** The prediction above was only half right. For common prefixes MongoDB avoids the in-memory sort by walking the sort index and filtering. For rare matches it first read the *whole collection*, because the `$or` branches on the partial `email`/`phoneDigits` indexes weren't indexable. Fixed by repeating `$type: "string"` in those branches (100,000 keys read → 13).
 
 ## ADR-006: Offset pagination with bounds
 

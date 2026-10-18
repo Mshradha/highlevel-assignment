@@ -35,6 +35,12 @@ function toAppError(err: unknown, requestId: unknown): AppError | undefined {
     if (err.keyPattern && "email" in err.keyPattern) return errors.duplicateEmail();
   }
 
+  // A query ran past its maxTimeMS (MongoDB error 50, MaxTimeMSExpired).
+  if (err instanceof mongoose.mongo.MongoServerError && err.code === 50) {
+    logger.warn("query exceeded its time limit", { requestId });
+    return new AppError(503, "QUERY_TIMEOUT", "The search took too long; try narrowing it");
+  }
+
   // A string that isn't an ObjectId reached a query. Zod should catch this first.
   if (err instanceof mongoose.Error.CastError && err.kind === "ObjectId") {
     return errors.invalidId();

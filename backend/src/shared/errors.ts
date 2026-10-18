@@ -12,6 +12,7 @@ export const ERROR_CODES = [
   "VERSION_CONFLICT", // 409: stale version (optimistic concurrency)
   "DUPLICATE_EMAIL", // 409: email belongs to another contact
   "TAG_LIMIT_EXCEEDED", // 422: valid request that breaks a business rule
+  "QUERY_TIMEOUT", // 503: a query exceeded its time limit; narrowing the search helps
   "INTERNAL_ERROR", // 500: unexpected; details only in server logs
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
