@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { objectIdSchema } from "../../shared/validation/schemas.js";
 import { CONTACT_LIMITS, TAG_PATTERN } from "./contact.constants.js";
 import { normalizeTag } from "./contact.normalize.js";
 
@@ -120,3 +121,40 @@ export const updateContactBodySchema = z
   });
 
 export type UpdateContactBody = z.output<typeof updateContactBodySchema>;
+
+// ---------------------------------------------------------------------------
+// Tags
+// ---------------------------------------------------------------------------
+
+/** Normalizes first (" VIP " → "vip"), then validates the stored form. */
+const normalizedTagSchema = z.string().transform(normalizeTag).pipe(tagSchema);
+
+export const addTagBodySchema = z.strictObject({ tag: normalizedTagSchema });
+
+/** DELETE /api/contacts/:id/tags/:tag — Express has already URL-decoded :tag. */
+export const tagParamsSchema = z.object({ id: objectIdSchema, tag: normalizedTagSchema });
+
+export const BULK_LIMITS = { maxContacts: 500 } as const;
+
+/**
+ * POST /api/contacts/bulk-tags. Duplicate ids are removed, so each contact is
+ * counted once. 500 ids keeps one transaction small and fast (ADR-009).
+ */
+export const bulkTagBodySchema = z.strictObject({
+  contactIds: z
+    .array(objectIdSchema)
+    .min(1, "Select at least one contact")
+    .max(BULK_LIMITS.maxContacts, `At most ${BULK_LIMITS.maxContacts} contacts per request`)
+    .transform((ids) => [...new Set(ids.map((id) => id.toLowerCase()))]),
+  tag: normalizedTagSchema,
+});
+
+export type BulkTagBody = z.output<typeof bulkTagBodySchema>;
+
+// ---------------------------------------------------------------------------
+// Activities
+// ---------------------------------------------------------------------------
+
+export const listActivitiesQuerySchema = z.strictObject({
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});

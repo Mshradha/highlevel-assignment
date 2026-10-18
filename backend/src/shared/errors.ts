@@ -51,6 +51,8 @@ export const errors = {
       "This contact was changed by someone else. Review the latest version and try again.",
       { current },
     ),
+  tagLimit: (max: number) =>
+    new AppError(422, "TAG_LIMIT_EXCEEDED", `A contact can have at most ${max} tags`),
   duplicateEmail: () =>
     new AppError(409, "DUPLICATE_EMAIL", "Another contact already uses this email", {
       field: "email",
