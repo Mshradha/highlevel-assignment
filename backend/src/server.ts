@@ -11,7 +11,7 @@ async function main(): Promise<void> {
   }
   const config = loadConfig();
 
-  await connectToDatabase(config.MONGODB_URI);
+  await connectToDatabase(config.MONGODB_URI, { autoIndex: config.NODE_ENV !== "production" });
   logger.info("connected to MongoDB");
 
   const app = createApp({ logRequests: config.NODE_ENV !== "test" });

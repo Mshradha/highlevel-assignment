@@ -1,9 +1,21 @@
 import mongoose from "mongoose";
 
-export async function connectToDatabase(uri: string): Promise<void> {
+export interface ConnectOptions {
+  /**
+   * Build schema indexes when models are first used. Convenient in development
+   * and tests; in production, index builds on a large collection are slow and
+   * should be a deliberate deployment step, so it is turned off there.
+   */
+  autoIndex?: boolean;
+}
+
+export async function connectToDatabase(
+  uri: string,
+  { autoIndex = true }: ConnectOptions = {},
+): Promise<void> {
   // Reject query filters on fields that are not in the schema instead of ignoring them.
   mongoose.set("strictQuery", true);
-  await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000 });
+  await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000, autoIndex });
   await assertReplicaSet();
 }
 
