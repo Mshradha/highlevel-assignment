@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createApp } from "../src/app.js";
 import { ContactModel } from "../src/modules/contacts/contact.model.js";
 import { AppError } from "../src/shared/errors.js";
 import { errorHandler } from "../src/shared/middleware/errorHandler.js";
@@ -79,5 +80,28 @@ describe("errorHandler", () => {
     const logged = JSON.parse(String(log.mock.calls[0]?.[0]));
     expect(logged).toMatchObject({ level: "error", requestId: res.headers["x-request-id"] });
     expect(logged.error.message).toContain("hunter2"); // the details stay in server logs
+  });
+});
+
+describe("errorHandler — limits", () => {
+  it("maps a query that ran past maxTimeMS (MongoDB error 50) to 503 QUERY_TIMEOUT", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const timeout = new mongoose.mongo.MongoServerError({
+      message: "operation exceeded time limit",
+      code: 50,
+    });
+    const res = await request(appThrowing(timeout)).get("/boom");
+    expect(res.status).toBe(503);
+    expect(res.body.error.code).toBe("QUERY_TIMEOUT");
+  });
+
+  it("rejects a JSON body over 100 kb with 413 PAYLOAD_TOO_LARGE", async () => {
+    const app = createApp();
+    const res = await request(app)
+      .patch("/api/contacts/6ad4b0d1bfcfc606379380c0")
+      .set("Content-Type", "application/json")
+      .send(JSON.stringify({ version: 1, company: "x".repeat(110 * 1024) }));
+    expect(res.status).toBe(413);
+    expect(res.body.error.code).toBe("PAYLOAD_TOO_LARGE");
   });
 });

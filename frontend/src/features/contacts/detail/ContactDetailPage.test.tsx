@@ -135,6 +135,28 @@ describe("ContactDetailPage — editing", () => {
   });
 });
 
+describe("ContactDetailPage — unsaved changes", () => {
+  /** True if the browser would ask "Leave site?" when closing the tab now. */
+  const closingTabIsBlocked = () => {
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it("warns before closing the tab only while there are unsaved edits", async () => {
+    updateContact.mockResolvedValue({ ...v1, company: "Globex", version: 2 });
+    await renderDetail();
+    expect(closingTabIsBlocked()).toBe(false);
+
+    await retype("Company", "Globex");
+    expect(closingTabIsBlocked()).toBe(true);
+
+    await userEvent.click(saveButton());
+    await screen.findByText(/Version 2/);
+    expect(closingTabIsBlocked()).toBe(false); // saved: nothing to lose
+  });
+});
+
 describe("ContactDetailPage — conflicting updates", () => {
   // Someone else saved version 2 with a different company and last name.
   const theirs = { ...v1, company: "Initech", lastName: "Alvarez", version: 2 };

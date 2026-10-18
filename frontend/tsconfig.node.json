@@ -1,5 +1,5 @@
 {
-  // Build tooling config files (run in Node, not the browser).
+  // Build tooling and end-to-end tests (run in Node, not the browser).
   "compilerOptions": {
     "target": "ES2023",
     "lib": ["ES2023"],
@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "playwright.config.ts", "e2e"]
 }
